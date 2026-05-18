@@ -160,16 +160,17 @@ hostnamectl set-hostname {hostname}.{domain}
 
 
 def appliance_create_dnsmasq_config(properties):
+    rev_zone = ".".join(zpodnet.split(".")[::-1]) + ".in-addr.arpa"
+
     dnsmasq_conf_cmd = """cat << EOF > /etc/dnsmasq.conf
 listen-address=127.0.0.1,{ipaddress}
 interface=lo,eth0
 bind-interfaces
 expand-hosts
-bogus-priv
 domain={domain}
 local=/{domain}/
+local=/{reverse_zone}/
 server={dns}
-server=/in-addr.arpa/{dns}
 no-dhcp-interface=lo,eth1,eth2,eth3
 dhcp-range={zpodnet}.50,{zpodnet}.60,{netmask},5m
 dhcp-option=option:router,{gateway}
@@ -184,6 +185,8 @@ systemctl start dnsmasq
         netmask=properties["guestinfo.netmask"],
         gateway=properties["guestinfo.gateway"],
         zpodnet=properties["guestinfo.zpodnet"],
+        reverse_zone=".".join(properties["guestinfo.zpodnet"].split(".")[::-1])
+        + ".in-addr.arpa",
         domain=properties["guestinfo.domain"],
         dns=properties["guestinfo.dns"],
     )
