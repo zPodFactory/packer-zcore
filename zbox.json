@@ -94,9 +94,15 @@
     ],
     "type": "shell-local"
   }],
-  "provisioners": [{
-      "destination": "/sbin/debian-init.py",
-      "source": "files/debian-init.py",
+  "provisioners": [
+    {
+      "destination": "/etc/systemd/system/zbox-init.service",
+      "source": "files/zbox-init.service",
+      "type": "file"
+    },
+    {
+      "destination": "/sbin/zbox-init.sh",
+      "source": "files/zbox-init.sh",
       "type": "file"
     },
     {
@@ -116,8 +122,28 @@
       ]
     },
     {
-      "destination": "$HOME/.poshthemes/zbox.omp.json",
+      "destination": "/usr/share/poshthemes/zbox.omp.json",
       "source": "files/zbox.omp.json",
+      "type": "file"
+    },
+    {
+      "destination": "/etc/skel/.zshrc",
+      "source": "files/zshrc",
+      "type": "file"
+    },
+    {
+      "destination": "/etc/skel/.tmux.conf",
+      "source": "files/tmux.conf",
+      "type": "file"
+    },
+    {
+      "destination": "$HOME/.zshrc",
+      "source": "files/zshrc",
+      "type": "file"
+    },
+    {
+      "destination": "$HOME/.tmux.conf",
+      "source": "files/tmux.conf",
       "type": "file"
     },
     {

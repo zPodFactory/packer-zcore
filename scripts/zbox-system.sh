@@ -11,7 +11,6 @@ apt-get install -y \
   jq \
   bat \
   duf \
-  exa \
   eza \
   fzf \
   git \
@@ -19,28 +18,23 @@ apt-get install -y \
   man \
   vim \
   btop \
+  ccze \
   file \
   htop \
   lnav \
   make \
-  ccze \
-  tree \
+  mise \
   tmux \
+  tree \
   bzip2 \
   dstat \
   unzip \
-  direnv \
   httpie \
+  ripgrep \
   colordiff \
   colortail \
   syslog-ng
 
-#
-# Install lazydocker
-# https://github.com/jesseduffield/lazydocker
-#
-curl https://raw.githubusercontent.com/jesseduffield/lazydocker/master/scripts/install_update_linux.sh | bash
-mv $HOME/.local/bin/lazydocker /usr/local/bin
 
 #
 # Install fx (JSON tool)
@@ -48,21 +42,16 @@ mv $HOME/.local/bin/lazydocker /usr/local/bin
 #
 curl https://fx.wtf/install.sh | sh
 
-#
-# Install television (tv)
-# https://github.com/alexpasmantier/television/
-#
-TELEVISION_LAST_VERSION=`curl -s "https://api.github.com/repos/alexpasmantier/television/releases/latest" | grep '"tag_name":' | sed -E 's/.*"tag_name": "([^"]+)".*/\1/'`
-curl -LO https://github.com/alexpasmantier/television/releases/download/$TELEVISION_LAST_VERSION/tv-$TELEVISION_LAST_VERSION-x86_64-unknown-linux-musl.deb
-sudo dpkg -i tv-$TELEVISION_LAST_VERSION-x86_64-unknown-linux-musl.deb
-rm -vf tv-$TELEVISION_LAST_VERSION-x86_64-unknown-linux-musl.deb
 
 #
-# Install ssm (ssh connection manager)
-# https://github.com/lfaoro/ssm?tab=readme-ov-file
+# Install chezmoi (https://chezmoi.io/)
+# https://github.com/twpayne/chezmoi
 #
-wget -qO- https://github.com/lfaoro/ssm/raw/main/scripts/get.sh | bash
-chown root:root /usr/local/bin/ssm
-
+curl -s https://api.github.com/repos/twpayne/chezmoi/releases/latest \
+| grep browser_download_url \
+| grep linux_amd64.deb \
+| cut -d '"' -f 4 \
+| xargs curl -LO \
+&& dpkg -i chezmoi_*_linux_amd64.deb && rm chezmoi_*_linux_amd64.deb
 
 echo '> Done'

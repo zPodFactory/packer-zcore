@@ -1,62 +1,41 @@
-#!/bin/zsh
+#!/bin/bash -eux
 
 ##
-## zboxapi setup
-## API to configure zbox features
+## zBoxAPI setup
+## API to configure zBox features + Traefik reverse proxy
+##
+## The FQDN-dependent configuration (TLS certificate, Traefik dynamic
+## routers) is generated at first boot by zbox-init.sh.
 ##
 
-# Install python pipx for self contained non system python packages
-apt install -y pipx
+echo '> Installing zBoxAPI...'
 
-# Ensure pipx is in the PATH
-pipx ensurepath
+# Install pipx for self-contained, non-system Python packages
+apt-get install -y pipx
 
-# Reload environment variables
-source ~/.zshrc
-
-# Install zboxapi
+# Install zboxapi (lands in /root/.local/bin/zboxapi, matching zboxapi.service)
 pipx install zboxapi
 
 ##
-##  Install Traefik
+## Install Traefik
 ##
 
-# Variables
-URL_TO_TRAEFIK_TAR_GZ="https://github.com/traefik/traefik/releases/download/v3.4.3/traefik_v3.4.3_linux_amd64.tar.gz"
-TRAFFIC_FILE_NAME="traefik_v3.4.3_linux_amd64.tar.gz"
-TRAFFIC_BINARY_NAME="traefik"
+echo '> Installing Traefik...'
+
+TRAEFIK_VERSION="v3.4.3"
+TRAEFIK_URL="https://github.com/traefik/traefik/releases/download/${TRAEFIK_VERSION}/traefik_${TRAEFIK_VERSION}_linux_amd64.tar.gz"
 INSTALL_DIR="/usr/local/bin"
 
-
-# Create a temporary directory
+# Download & install the Traefik binary from a temporary directory
 TEMP_DIR=$(mktemp -d)
-
-# Function to clean up temporary directory on exit
-cleanup() {
-  rm -rf "$TEMP_DIR"
-}
+cleanup() { rm -rf "$TEMP_DIR"; }
 trap cleanup EXIT
 
-# Download Traefik tar.gz file to the temporary directory
-curl -L -o "$TEMP_DIR/$TRAFFIC_FILE_NAME" $URL_TO_TRAEFIK_TAR_GZ
+curl -fsSL -o "$TEMP_DIR/traefik.tar.gz" "$TRAEFIK_URL"
+tar -xzf "$TEMP_DIR/traefik.tar.gz" -C "$TEMP_DIR" traefik
+install -o root -g root -m 0755 "$TEMP_DIR/traefik" "$INSTALL_DIR/traefik"
 
-# Extract the tar.gz file in the temporary directory
-tar -xzf "$TEMP_DIR/$TRAFFIC_FILE_NAME" -C "$TEMP_DIR"
-
-# Move the traefik binary to /usr/local/bin
-mv "$TEMP_DIR/$TRAFFIC_BINARY_NAME" $INSTALL_DIR
-
-# Set executable permissions on the binary
-chmod +x "$INSTALL_DIR/$TRAFFIC_BINARY_NAME"
-
-# Set ownership to root:root
-chown root:root $INSTALL_DIR/$TRAFFIC_BINARY_NAME
-
-
-# Prep Traefik configuration directory
+# Prepare the Traefik configuration directories
 mkdir -vp /etc/traefik/{certificates,dynamic}
 
-#
-# Rest will happen with firstboot OVF configuration script
-# We require final FQDN to setup certificates + traefik configuration
-#
+echo '> Done'

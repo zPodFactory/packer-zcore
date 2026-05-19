@@ -6,12 +6,14 @@
 ##
 
 # Install pre-requisites
+apt-get update
 apt-get install -y \
-  apt-transport-https \
   ca-certificates \
-  curl \
-  gnupg2 \
-  software-properties-common
+  gnupg \
+  lsb-release
+
+# Detect Debian codename
+debian_codename=$(lsb_release -cs)
 
 # Create folder for all new added APT repositories GPG Signing Keys
 mkdir -m 0755 -p /etc/apt/keyrings
@@ -24,7 +26,7 @@ curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/
 
 # Add Docker official repository
 
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" \
+echo "deb [signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian ${debian_codename} stable" \
 | tee /etc/apt/sources.list.d/docker.list
 
 ##
@@ -33,46 +35,64 @@ echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.
 
 curl -fsSL https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /etc/apt/keyrings/hashicorp.gpg
 
-# Add Hashicorp official reposiroty
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/hashicorp.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" \
+# Add Hashicorp official repository (fallback to bookworm on trixie)
+echo "deb [signed-by=/etc/apt/keyrings/hashicorp.gpg] https://apt.releases.hashicorp.com ${debian_codename} main" \
 | tee /etc/apt/sources.list.d/hashicorp.list
 
 ##
 ## Kubernetes
 ##
 
-curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.33/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
-chmod 644 /etc/apt/keyrings/kubernetes-apt-keyring.gpg # allow unprivileged APT programs to read this keyring
+kubernetes_version=$(curl -L -s https://dl.k8s.io/release/stable.txt | cut -d. -f1-2)
+curl -fsSL https://pkgs.k8s.io/core:/stable:/${kubernetes_version}/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/kubernetes.gpg
 
 # Add Kubernetes official repository
-
-echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.33/deb/ /' \
+echo "deb [signed-by=/etc/apt/keyrings/kubernetes.gpg] https://pkgs.k8s.io/core:/stable:/${kubernetes_version}/deb/ /" \
 | tee /etc/apt/sources.list.d/kubernetes.list
-
-##
-## Powershell
-##
-
-curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor -o /etc/apt/keyrings/microsoft.gpg
-
-# Add microsoft official repository
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/microsoft.gpg] https://packages.microsoft.com/repos/microsoft-debian-$(lsb_release -cs)-prod $(lsb_release -cs) main" \
-| tee /etc/apt/sources.list.d/microsoft.list
 
 
 ##
 ## Tailscale
 ##
 
-curl -fsSL https://pkgs.tailscale.com/stable/debian/bookworm.noarmor.gpg | tee /usr/share/keyrings/tailscale-archive-keyring.gpg >/dev/null
-curl -fsSL https://pkgs.tailscale.com/stable/debian/bookworm.tailscale-keyring.list | tee /etc/apt/sources.list.d/tailscale.list
+curl -fsSL "https://pkgs.tailscale.com/stable/debian/${debian_codename}.noarmor.gpg" | gpg --dearmor -o /etc/apt/keyrings/tailscale.gpg
+
+# Add Tailscale official repository
+echo "deb [signed-by=/etc/apt/keyrings/tailscale.gpg] https://pkgs.tailscale.com/stable/debian ${debian_codename} main" \
+| tee /etc/apt/sources.list.d/tailscale.list
+
 
 ##
-## eza
+## Netbird
 ##
 
-wget -qO- https://raw.githubusercontent.com/eza-community/eza/main/deb.asc | gpg --dearmor -o /etc/apt/keyrings/gierens.gpg
-echo "deb [signed-by=/etc/apt/keyrings/gierens.gpg] http://deb.gierens.de stable main" | tee /etc/apt/sources.list.d/gierens.list
+curl -fsSL https://pkgs.netbird.io/debian/public.key | gpg --dearmor -o /etc/apt/keyrings/netbird.gpg
+
+# Add Netbird official repository
+echo "deb [signed-by=/etc/apt/keyrings/netbird.gpg] https://pkgs.netbird.io/debian stable main" \
+| tee /etc/apt/sources.list.d/netbird.list
+
+
+##
+## Cloudflare Tunnel
+##
+
+curl -fsSL https://pkg.cloudflare.com/cloudflare-main.gpg | gpg --dearmor -o /etc/apt/keyrings/cloudflare-main.gpg
+
+# Add Cloudflare Tunnel official repository
+echo "deb [signed-by=/etc/apt/keyrings/cloudflare-main.gpg] https://pkg.cloudflare.com/cloudflared any main" \
+| tee /etc/apt/sources.list.d/cloudflared.list
+
+##
+## Mise
+##
+
+curl -fSs https://mise.en.dev/gpg-key.pub | gpg --dearmor -o /etc/apt/keyrings/mise.gpg
+
+# Add Mise official repository
+echo "deb [signed-by=/etc/apt/keyrings/mise.gpg] https://mise.en.dev/deb stable main" \
+| tee /etc/apt/sources.list.d/mise.list
+
 
 # Update APT repository package list
 apt-get update

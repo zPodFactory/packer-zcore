@@ -4,5 +4,8 @@ rm -rf output-zbox-*
 
 packer build \
     --var-file="zbox-builder.json" \
-    --var-file="zbox-12.11.json" \
+    --var-file="zbox-13.5.json" \
     zbox.json
+
+# Ensure the freshly created OVA is world-readable (644)
+chmod 644 output-zbox-*/*.ova

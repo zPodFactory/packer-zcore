@@ -4,6 +4,10 @@
 ## Debian Storage
 ## Install Storage utilities
 ##
+## The zBox Core Services appliance acts as an NFS server, so the
+## nfs-kernel-server package is installed here. Exports are configured
+## at first boot by zbox-init.sh.
+##
 
 echo '> Installing Storage utilities...'
 
@@ -13,13 +17,13 @@ apt-get install -y \
   pure-ftpd \
   nfs-kernel-server
 
-# Install wiper (disk usage TUI)
-curl -L https://github.com/ikebastuz/wiper/releases/download/v0.2.1/wiper-x86_64-unknown-linux-gnu.tar.gz -o wiper.tar.gz
-tar -xzf wiper.tar.gz
-mv wiper /usr/local/bin
-chmod +x /usr/local/bin/wiper
-chown root:root /usr/local/bin/wiper
-rm -vf wiper.tar.gz
-rm -vf ._wiper
+#
+# Install cull (disk usage TUI)
+# https://github.com/legostin/cull
+#
+curl -fsSL https://github.com/legostin/cull/releases/latest/download/cull_linux_amd64.tar.gz \
+ | tar -xz -C /tmp \
+ && install -o root -g root -m 0755 /tmp/cull /usr/local/bin/cull \
+ && rm -f /tmp/cull
 
 echo '> Done'
