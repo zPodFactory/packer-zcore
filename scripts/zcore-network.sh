@@ -72,7 +72,7 @@ curl -fsSL -o /dev/null -w "%{url_effective}" -L https://github.com/surge-downlo
   | tar -xzO surge > /usr/local/bin/surge' \
 && chmod 0755 /usr/local/bin/surge
 
-# zBox routes between the zPod VLANs; FRR is installed but left disabled
+# zCore routes between the zPod VLANs; FRR is installed but left disabled
 # and enabled on demand by the operator / zBoxAPI.
 systemctl disable frr
 

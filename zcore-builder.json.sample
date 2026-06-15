@@ -1,0 +1,8 @@
+{
+  "builder_host": "esxi.example.com",
+  "builder_host_username": "root",
+  "builder_host_password": "CHANGE_ME",
+  "builder_host_datastore": "datastore-name",
+  "builder_host_folder": "/isos",
+  "builder_host_portgroup": "VM Network"
+}

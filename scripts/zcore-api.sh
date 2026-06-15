@@ -2,10 +2,10 @@
 
 ##
 ## zBoxAPI setup
-## API to configure zBox features + Traefik reverse proxy
+## API to configure zCore features + Traefik reverse proxy
 ##
 ## The FQDN-dependent configuration (TLS certificate, Traefik dynamic
-## routers) is generated at first boot by zbox-init.sh.
+## routers) is generated at first boot by zcore-init.sh.
 ##
 
 echo '> Installing zBoxAPI...'

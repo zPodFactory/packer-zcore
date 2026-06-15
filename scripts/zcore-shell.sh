@@ -1,7 +1,7 @@
 #!/bin/bash -eux
 
 ##
-## zBox shell tuning
+## zCore shell tuning
 ## Installs shell tools globally so all users get the same configuration
 ##
 
@@ -10,7 +10,7 @@ OMZ_DIR="/usr/share/oh-my-zsh"
 POSH_THEMES_DIR="/usr/share/poshthemes"
 TMUX_PLUGINS_DIR="/usr/share/tmux/plugins"
 
-echo '> Installing zBox Shell...'
+echo '> Installing zCore Shell...'
 
 apt-get install -y zsh
 

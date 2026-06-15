@@ -52,5 +52,5 @@ if [[ -n $SSH_CONNECTION ]]; then
   alias ll="eza -ll --group-directories-first --icons \$eza_params"
   alias la="eza -la --group-directories-first --icons \$eza_params"
   # Load fancy prompt if on SSH/nerd-fonts for symbols
-  eval "$(oh-my-posh --init --shell zsh --config /usr/share/poshthemes/zbox.omp.json)"
+  eval "$(oh-my-posh --init --shell zsh --config /usr/share/poshthemes/zcore.omp.json)"
 fi

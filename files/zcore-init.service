@@ -1,5 +1,5 @@
 [Unit]
-Description=zBox early init (requires vmtools + dbus)
+Description=zCore early init (requires vmtools + dbus)
 # Ensure root fs is rw before doing anything
 After=systemd-remount-fs.service local-fs.target
 # Hard requirements
@@ -8,7 +8,7 @@ After=open-vm-tools.service dbus.socket
 
 [Service]
 Type=oneshot
-ExecStart=/sbin/zbox-init.sh
+ExecStart=/sbin/zcore-init.sh
 RemainAfterExit=yes
 
 [Install]

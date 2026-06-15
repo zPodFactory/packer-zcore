@@ -13,7 +13,7 @@
       "keyboard-configuration/xkb-keymap=us <wait>",
       "netcfg/choose_interface=eth0 <wait>",
       "netcfg/get_hostname={{ user `hostname` }} <wait>",
-      "netcfg/get_domain=zbox.lab <wait>",
+      "netcfg/get_domain=zcore.lab <wait>",
       "fb=false <wait>",
       "debconf/frontend=noninteractive <wait>",
       "console-setup/ask_detect=false <wait>",
@@ -96,34 +96,34 @@
   }],
   "provisioners": [
     {
-      "destination": "/etc/systemd/system/zbox-init.service",
-      "source": "files/zbox-init.service",
+      "destination": "/etc/systemd/system/zcore-init.service",
+      "source": "files/zcore-init.service",
       "type": "file"
     },
     {
-      "destination": "/sbin/zbox-init.sh",
-      "source": "files/zbox-init.sh",
+      "destination": "/sbin/zcore-init.sh",
+      "source": "files/zcore-init.sh",
       "type": "file"
     },
     {
       "type": "shell",
       "environment_vars": ["DEBIAN_FRONTEND=noninteractive"],
       "scripts": [
-        "scripts/zbox-update.sh",
-        "scripts/zbox-apt.sh",
-        "scripts/zbox-system.sh",
-        "scripts/zbox-network.sh",
-        "scripts/zbox-storage.sh",
-        "scripts/zbox-settings.sh",
-        "scripts/zbox-shell.sh",
-        "scripts/zbox-vmware.sh",
-        "scripts/zbox-api.sh",
-        "scripts/zbox-cleanup.sh"
+        "scripts/zcore-update.sh",
+        "scripts/zcore-apt.sh",
+        "scripts/zcore-system.sh",
+        "scripts/zcore-network.sh",
+        "scripts/zcore-storage.sh",
+        "scripts/zcore-settings.sh",
+        "scripts/zcore-shell.sh",
+        "scripts/zcore-vmware.sh",
+        "scripts/zcore-api.sh",
+        "scripts/zcore-cleanup.sh"
       ]
     },
     {
-      "destination": "/usr/share/poshthemes/zbox.omp.json",
-      "source": "files/zbox.omp.json",
+      "destination": "/usr/share/poshthemes/zcore.omp.json",
+      "source": "files/zcore.omp.json",
       "type": "file"
     },
     {

@@ -1,7 +1,7 @@
 #!/bin/zsh
 
 ##
-## zBox Core Services - first boot initialization
+## zCore - first boot initialization
 ##
 ## Configures the appliance from VMware OVF properties on first boot:
 ##   1. Network        - mgmt interface (eth0) + zPod VLANs (eth1)
@@ -13,16 +13,16 @@
 ##   7. Certificates    - TLS certificate for Traefik / zBoxAPI
 ##   8. Traefik         - dynamic routers for the dashboard & zBoxAPI
 ##
-## Driven by the zbox-init.service systemd unit. Runs exactly once,
-## guarded by the presence of $ZBOX_CONFIG_FILE.
+## Driven by the zcore-init.service systemd unit. Runs exactly once,
+## guarded by the presence of $ZCORE_CONFIG_FILE.
 ##
 ## This is a faithful shell rewrite of the former files/debian-init.py.
 ##
 
 # Path to the temporary OVF environment file
-ZBOX_OVFENV_FILE="/tmp/ovfenv.xml"
+ZCORE_OVFENV_FILE="/tmp/ovfenv.xml"
 # Path to the configuration file (also acts as the run-once marker)
-ZBOX_CONFIG_FILE="/etc/zbox.config"
+ZCORE_CONFIG_FILE="/etc/zcore.config"
 
 
 log() {
@@ -31,7 +31,7 @@ log() {
 
     echo "$message"
     # Append the timestamp and message to the config / marker file
-    echo "[$timestamp] $message" >>"$ZBOX_CONFIG_FILE"
+    echo "[$timestamp] $message" >>"$ZCORE_CONFIG_FILE"
 }
 
 
@@ -53,12 +53,12 @@ appliance_config_ovf_settings() {
     log "Fetching OVF settings..."
 
     # Save the OVF environment to a file
-    vmtoolsd --cmd 'info-get guestinfo.ovfEnv' >"$ZBOX_OVFENV_FILE"
+    vmtoolsd --cmd 'info-get guestinfo.ovfEnv' >"$ZCORE_OVFENV_FILE"
 
     # Extract only the first PropertySection (direct child of Environment).
     # When deployed inside a vApp the OVF environment contains one
     # PropertySection per VM; the first one belongs to this VM.
-    FIRST_PROP_SECTION=$(awk '/<PropertySection>/,/<\/PropertySection>/{print; if(/<\/PropertySection>/) exit}' "$ZBOX_OVFENV_FILE")
+    FIRST_PROP_SECTION=$(awk '/<PropertySection>/,/<\/PropertySection>/{print; if(/<\/PropertySection>/) exit}' "$ZCORE_OVFENV_FILE")
 
     # Parse the OVF properties from the extracted section
     OVF_HOSTNAME=$(echo "$FIRST_PROP_SECTION" | sed -n 's/.*Property oe:key="guestinfo.hostname" oe:value="\([^"]*\).*/\1/p')
@@ -87,7 +87,7 @@ appliance_config_ovf_settings() {
     fi
 
     log "=========================================="
-    log "ZBOX CORE SERVICES DEPLOYMENT"
+    log "ZCORE DEPLOYMENT"
     log "=========================================="
     log "FQDN: $OVF_HOSTNAME.$OVF_DOMAIN"
     log "DNS: $OVF_DNS"
@@ -109,7 +109,7 @@ appliance_config_network() {
         cat <<EOF >/etc/network/interfaces
 # This file describes the network interfaces available on your system
 # and how to activate them. For more information, see interfaces(5).
-# Managed by zbox-init.sh
+# Managed by zcore-init.sh
 
 source /etc/network/interfaces.d/*
 
@@ -130,7 +130,7 @@ EOF
     cat <<EOF >/etc/network/interfaces
 # This file describes the network interfaces available on your system
 # and how to activate them. For more information, see interfaces(5).
-# Managed by zbox-init.sh
+# Managed by zcore-init.sh
 
 source /etc/network/interfaces.d/*
 
@@ -242,7 +242,7 @@ appliance_config_chrony() {
     log "Configuring chrony (NTP server)..."
 
     cat <<EOF >/etc/chrony/chrony.conf
-# Managed by zbox-init.sh
+# Managed by zcore-init.sh
 pool 0.debian.pool.ntp.org iburst
 pool 1.debian.pool.ntp.org iburst
 pool 2.debian.pool.ntp.org iburst
@@ -364,8 +364,8 @@ appliance_config_certificates() {
     openssl req -x509 -newkey rsa:2048 -days 3650 -nodes \
         -keyout /etc/traefik/certificates/cert.key \
         -out /etc/traefik/certificates/cert.crt \
-        -subj "/C=US/O=zPodFactory/CN=zbox.$OVF_DOMAIN" \
-        -addext "subjectAltName = DNS:zbox.$OVF_DOMAIN"
+        -subj "/C=US/O=zPodFactory/CN=zcore.$OVF_DOMAIN" \
+        -addext "subjectAltName = DNS:zcore.$OVF_DOMAIN"
     log "Certificate generated."
 }
 
@@ -379,7 +379,7 @@ appliance_config_traefik() {
 http:
   routers:
     dashboard-router:
-      rule: "Host(\`zbox.$OVF_DOMAIN\`) && PathPrefix(\`/dashboard\`) || PathPrefix(\`/api\`)"
+      rule: "Host(\`zcore.$OVF_DOMAIN\`) && PathPrefix(\`/dashboard\`) || PathPrefix(\`/api\`)"
       entryPoints: ["websecure"]
       service: api@internal
       tls: true
@@ -390,7 +390,7 @@ EOF
 http:
   routers:
     zboxapi-router:
-      rule: "Host(\`zbox.$OVF_DOMAIN\`) && PathPrefix(\`/zboxapi\`)"
+      rule: "Host(\`zcore.$OVF_DOMAIN\`) && PathPrefix(\`/zboxapi\`)"
       entryPoints: ["websecure"]
       middlewares:
         - "prefix-api@file"
@@ -421,8 +421,8 @@ EOF
 # Appliance configuration flow
 main() {
     # Run exactly once: the config file is created by the first log() call
-    if [[ -f "$ZBOX_CONFIG_FILE" ]]; then
-        echo "$ZBOX_CONFIG_FILE exists, zbox-init has already run. Exiting..."
+    if [[ -f "$ZCORE_CONFIG_FILE" ]]; then
+        echo "$ZCORE_CONFIG_FILE exists, zcore-init has already run. Exiting..."
         exit 0
     fi
 
@@ -442,11 +442,11 @@ main() {
     fi
 
     # Clean up the temporary OVF environment file
-    if [[ -f "$ZBOX_OVFENV_FILE" ]]; then
-        rm -vf "$ZBOX_OVFENV_FILE"
+    if [[ -f "$ZCORE_OVFENV_FILE" ]]; then
+        rm -vf "$ZCORE_OVFENV_FILE"
     fi
 
-    log "zBox Core Services setup complete."
+    log "zCore setup complete."
 }
 
 main "$@"

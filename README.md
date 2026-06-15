@@ -1,6 +1,6 @@
-# packer-zbox-core-services
+# packer-zcore
 
-[Packer](https://www.packer.io/) build for the **zBox Core Services Appliance** —
+[Packer](https://www.packer.io/) build for the **zCore Appliance** —
 a Debian-based OVA that provides the shared infrastructure services for a zPod
 environment.
 
@@ -34,16 +34,18 @@ IP forwarding is enabled, so the appliance also routes between the zPod VLANs.
 
 Requirements: `packer`, VMware `ovftool`, and a reachable ESXi build host.
 
-1. Set your ESXi build host details in `zbox-builder.json`.
+1. Copy `zcore-builder.json.sample` to `zcore-builder.json` and fill in your
+   ESXi build host details. (The real `zcore-builder.json` is `.gitignore`d so
+   credentials are never committed.)
 2. Run the build:
 
    ```sh
-   ./build-zbox.sh
+   ./build-zcore.sh
    ```
 
-This runs `packer build` against `zbox.json` with the `zbox-13.5.json` version
+This runs `packer build` against `zcore.json` with the `zcore-13.5.json` version
 file, then exports the OVA. The result lands in
-`output-zbox-core-services-13.5/zbox-core-services-13.5.ova` (mode `644`).
+`output-zcore-13.5/zcore-13.5.ova` (mode `644`).
 
 ## Deploying
 

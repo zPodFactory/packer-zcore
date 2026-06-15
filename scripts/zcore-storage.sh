@@ -4,9 +4,9 @@
 ## Debian Storage
 ## Install Storage utilities
 ##
-## The zBox Core Services appliance acts as an NFS server, so the
+## The zCore appliance acts as an NFS server, so the
 ## nfs-kernel-server package is installed here. Exports are configured
-## at first boot by zbox-init.sh.
+## at first boot by zcore-init.sh.
 ##
 
 echo '> Installing Storage utilities...'
