@@ -78,7 +78,9 @@
       "ethernet3.startConnected": "TRUE",
       "ethernet3.virtualDev": "vmxnet3",
       "ethernet3.addressType": "generated",
-      "ethernet3.wakeOnPcktRcv": "FALSE"
+      "ethernet3.wakeOnPcktRcv": "FALSE",
+
+      "scsi0.virtualDev": "pvscsi"
     },
     "vnc_disable_password": true
   }],
@@ -103,6 +105,11 @@
     {
       "destination": "/sbin/zcore-init.sh",
       "source": "files/zcore-init.sh",
+      "type": "file"
+    },
+    {
+      "destination": "/sbin/zcore-zboxtui-setup.sh",
+      "source": "files/zcore-zboxtui-setup.sh",
       "type": "file"
     },
     {

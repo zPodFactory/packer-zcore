@@ -5,6 +5,7 @@
 ##
 ## Configures the appliance from VMware OVF properties on first boot:
 ##   1. Network        - mgmt interface (eth0) + zPod VLANs (eth1)
+##   1b. Storage        - grow the LVM root volume to the disk size
 ##   2. Hostname        - hostname & /etc/hosts
 ##   3. dnsmasq         - DNS + DHCP for the zPod management subnet
 ##   4. chrony          - NTP server for the zPod subnets
@@ -12,9 +13,13 @@
 ##   6. Credentials     - root password & SSH public key
 ##   7. Certificates    - TLS certificate for Traefik / zBoxAPI
 ##   8. Traefik         - dynamic routers for the dashboard & zBoxAPI
+##   9. Console         - optional zBoxTUI on tty1 (guestinfo.zboxtui)
 ##
 ## Driven by the zcore-init.service systemd unit. Runs exactly once,
 ## guarded by the presence of $ZCORE_CONFIG_FILE.
+##
+## `zcore-init.sh --extend-disk` runs only the storage step: after the system
+## disk was enlarged in vSphere, it grows the LVM root volume into the new space.
 ##
 ## This is a faithful shell rewrite of the former files/debian-init.py.
 ##
@@ -23,6 +28,22 @@
 ZCORE_OVFENV_FILE="/tmp/ovfenv.xml"
 # Path to the configuration file (also acts as the run-once marker)
 ZCORE_CONFIG_FILE="/etc/zcore.config"
+
+# Parse command line arguments
+EXTEND_DISK_MODE=false
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --extend-disk)
+            EXTEND_DISK_MODE=true
+            shift
+            ;;
+        *)
+            echo "Unknown option: $1"
+            echo "Usage: $0 [--extend-disk]"
+            exit 1
+            ;;
+    esac
+done
 
 
 log() {
@@ -69,6 +90,7 @@ appliance_config_ovf_settings() {
     OVF_NETPREFIX=$(echo "$FIRST_PROP_SECTION" | sed -n 's/.*Property oe:key="guestinfo.netprefix" oe:value="\([^"]*\).*/\1/p')
     OVF_PASSWORD=$(echo "$FIRST_PROP_SECTION" | sed -n 's/.*Property oe:key="guestinfo.password" oe:value="\([^"]*\).*/\1/p')
     OVF_SSHKEY=$(echo "$FIRST_PROP_SECTION" | sed -n 's/.*Property oe:key="guestinfo.sshkey" oe:value="\([^"]*\).*/\1/p')
+    OVF_ZBOXTUI=$(echo "$FIRST_PROP_SECTION" | sed -n 's/.*Property oe:key="guestinfo.zboxtui" oe:value="\([^"]*\).*/\1/p')
 
     # Derive the zPod network values from the management IP address.
     # All zPod subnets are carved out of the /24 the mgmt IP belongs to.
@@ -94,6 +116,7 @@ appliance_config_ovf_settings() {
     log "Network: $OVF_IPADDRESS/$OVF_NETPREFIX"
     log "Gateway: $OVF_GATEWAY"
     log "zPod subnet: $OVF_ZPODSUBNET"
+    log "zBoxTUI: ${OVF_ZBOXTUI:-false}"
     log "=========================================="
 }
 
@@ -189,6 +212,62 @@ EOF
 
     systemctl start networking
     log "Network configured (management interface + zPod VLANs)."
+}
+
+
+# Grow the LVM root volume to the size of the system disk.
+# Layout from http/preseed.cfg (same as zBox): sda1 /boot, sda2 extended,
+# sda5 LVM PV -> vg/swap (8 GB) + vg/root (rest). Runs at first boot and on
+# demand with --extend-disk after the virtual disk was enlarged in vSphere.
+appliance_config_storage() {
+    log "Configuring storage..."
+
+    log "Disk usage before extending partitions:"
+    duf -only local | tee -a "$ZCORE_CONFIG_FILE"
+
+    # Rescan the disk (detect size change)
+    echo 1 > /sys/class/block/sda/device/rescan
+
+    # Grow the extended partition (2) and the LVM partition (5) inside it.
+    # growpart exits 1 with NOCHANGE when the partition already fills the disk,
+    # which is the normal case on a first boot without a disk resize.
+    local part out
+    for part in 2 5; do
+        if out=$(growpart /dev/sda "$part" 2>&1); then
+            log "Extended partition $part on /dev/sda."
+        elif [[ "$out" == *NOCHANGE* ]]; then
+            log "Partition $part on /dev/sda already fills the disk."
+        else
+            log "Failed to extend partition $part on /dev/sda: $out"
+            return 1
+        fi
+    done
+
+    # Resize the physical volume
+    if pvresize /dev/sda5; then
+        log "Resized physical volume /dev/sda5."
+    else
+        log "Failed to resize physical volume /dev/sda5."
+        return 1
+    fi
+
+    # Extend the logical volume to use all available free space
+    if lvextend -l +100%FREE /dev/vg/root; then
+        log "Extended logical volume /dev/vg/root."
+    else
+        log "Logical volume /dev/vg/root unchanged (no free space in vg)."
+    fi
+
+    # Resize the filesystem
+    if resize2fs /dev/vg/root; then
+        log "Resized filesystem on /dev/vg/root."
+    else
+        log "Failed to resize filesystem on /dev/vg/root."
+        return 1
+    fi
+
+    log "Disk usage after resizing:"
+    duf -only local | tee -a "$ZCORE_CONFIG_FILE"
 }
 
 
@@ -418,8 +497,76 @@ EOF
 }
 
 
+# Enable or remove zBoxTUI on the physical console (tty1).
+# The image ships with zBoxTUI installed but not wired to any console (stock getty
+# everywhere). "True" (what govc produces for a boolean OVF property) wires it up;
+# anything else purges kmscon + zBoxTUI to reclaim the space the build baked in.
+appliance_config_zboxtui() {
+    if [[ ! -x /sbin/zcore-zboxtui-setup.sh ]]; then
+        log "zcore-zboxtui-setup.sh not present; skipping console setup."
+        return
+    fi
+
+    if [[ "$OVF_ZBOXTUI" == "True" ]]; then
+        log "zBoxTUI enabled via OVF property."
+        /sbin/zcore-zboxtui-setup.sh --enable 2>&1 | tee -a "$ZCORE_CONFIG_FILE"
+    else
+        log "zBoxTUI disabled (default); removing it to reclaim space."
+        /sbin/zcore-zboxtui-setup.sh --disable 2>&1 | tee -a "$ZCORE_CONFIG_FILE"
+    fi
+}
+
+
+# Restart kmscon/getty and switch to the configured default VT (first boot).
+appliance_config_console() {
+    log "Configuring console..."
+
+    local zcore_tty="tty1" vt_num=""
+    if [[ -r /etc/zcore/default-console-vt ]]; then
+        vt_num="$(tr -d '[:space:]' </etc/zcore/default-console-vt)"
+        if [[ "$vt_num" =~ '^[0-9]+$' ]]; then
+            zcore_tty="tty${vt_num}"
+        else
+            log "Warning: invalid value in /etc/zcore/default-console-vt"
+            vt_num=""
+        fi
+    fi
+
+    if systemctl is-enabled kmsconvt@tty2.service &>/dev/null; then
+        log "Restarting kmscon on tty2..."
+        systemctl restart kmsconvt@tty2.service 2>/dev/null || true
+    fi
+    if systemctl is-enabled "kmsconvt@${zcore_tty}.service" &>/dev/null; then
+        log "Restarting kmscon on ${zcore_tty}..."
+        systemctl restart "kmsconvt@${zcore_tty}.service"
+    elif systemctl is-enabled kmsconvt@.service &>/dev/null \
+        || [[ -L /etc/systemd/system/autovt@.service ]]; then
+        log "Restarting kmscon on tty1 (all-VT mode)..."
+        systemctl restart kmsconvt@tty1.service 2>/dev/null || true
+    else
+        log "Restarting getty on tty1..."
+        systemctl restart getty@tty1.service
+    fi
+
+    if [[ -n "$vt_num" ]]; then
+        log "Switching active VT to ${zcore_tty} (Ctrl+Alt+F${vt_num})..."
+        sleep 2
+        if command -v chvt >/dev/null; then
+            chvt "$vt_num"
+        else
+            log "Warning: chvt not found, skipping VT switch"
+        fi
+    fi
+}
+
+
 # Appliance configuration flow
 main() {
+    if [[ "$EXTEND_DISK_MODE" == "true" ]]; then
+        appliance_config_storage
+        return
+    fi
+
     # Run exactly once: the config file is created by the first log() call
     if [[ -f "$ZCORE_CONFIG_FILE" ]]; then
         echo "$ZCORE_CONFIG_FILE exists, zcore-init has already run. Exiting..."
@@ -428,6 +575,7 @@ main() {
 
     appliance_config_ovf_settings
     appliance_config_network
+    appliance_config_storage
     appliance_config_credentials
 
     if [[ -n "$OVF_IPADDRESS" ]]; then
@@ -440,6 +588,9 @@ main() {
     else
         log "No management IP in OVF properties; skipped DNS/NTP/NFS/Traefik configuration."
     fi
+
+    appliance_config_zboxtui
+    appliance_config_console
 
     # Clean up the temporary OVF environment file
     if [[ -f "$ZCORE_OVFENV_FILE" ]]; then

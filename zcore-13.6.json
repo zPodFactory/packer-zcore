@@ -1,15 +1,15 @@
 {
-    "version": "13.5",
+    "version": "13.6",
     "author": "Timo Sugliani",
     "website": "https://github.com/zPodFactory",
     "description": "zCore Appliance",
-    "vm_name": "zcore-13.5",
+    "vm_name": "zcore-13.6",
     "hostname": "zcore",
     "numvcpus": "2",
     "ramsize": "4096",
-    "iso_checksum": "95838884f5ea6c82421dfe6baaa5a639dbbe6756c1e380f9fe7a7cb0c1949d2a",
+    "iso_checksum": "65273beed27b2df543b68b65630ba525cfbad8df2b12035732b2dff87d6664e7",
     "iso_checksum_type": "sha256",
-    "iso_url": "https://cdimage.debian.org/cdimage/archive/13.5.0/amd64/iso-cd/debian-13.5.0-amd64-netinst.iso",
+    "iso_url": "https://cdimage.debian.org/cdimage/archive/13.6.0/amd64/iso-cd/debian-13.6.0-amd64-netinst.iso",
     "guest_username": "root",
     "guest_password": "VMware1!"
 }

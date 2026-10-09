@@ -14,9 +14,17 @@ entryPoints:
   web:
     address: ":80"
     http:
+      aliasHeadersStrategy: keep
       redirections:
         entrypoint:
           scheme: "https"
           to: "websecure"
   websecure:
     address: ":443"
+    http:
+      # Traefik >= 3.7.12 warns at startup when this is left unset. "delete" silently
+      # drops every request header whose name is not letters, digits and dashes, and
+      # zboxapi authenticates with the "access_token" header: every call through the
+      # proxy answered 403 "Invalid access_token". "keep" forwards such headers as is,
+      # which is safe here because zboxapi never treats X_Foo and X-Foo as the same.
+      aliasHeadersStrategy: keep

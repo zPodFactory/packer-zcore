@@ -1,3 +1,25 @@
+# Ignore builder configuration file containing sensitive information
+zcore-builder.json
+
+# Installer ISOs and exported appliances
 *.iso
 *.ova
-zcore-builder.json
+
+# Packer build output (multi-GB OVA artifacts)
+output-*/
+
+# Local analysis/scratch reports
+docs/
+
+# Local Claude Code session settings
+.claude/
+
+# Local list of strings that must never enter the history (tools/release.py --check)
+.release-denylist
+
+# Local OVA test helpers (carry a lab address and a password)
+test-zcore.sh
+test-zcore.json
+
+# Run transcripts and captures
+runs/

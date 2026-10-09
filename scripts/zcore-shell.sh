@@ -44,7 +44,7 @@ rm -vf /tmp/themes.zip
 
 echo '> Installing tmux plugins globally...'
 mkdir -p $TMUX_PLUGINS_DIR/catppuccin
-git clone -b v2.1.3 https://github.com/catppuccin/tmux.git $TMUX_PLUGINS_DIR/catppuccin/tmux
+git clone -b v2.3.1 https://github.com/catppuccin/tmux.git $TMUX_PLUGINS_DIR/catppuccin/tmux
 git clone https://github.com/tmux-plugins/tpm $TMUX_PLUGINS_DIR/tpm
 
 

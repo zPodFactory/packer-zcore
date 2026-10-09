@@ -8,12 +8,17 @@
 ## nfs-kernel-server package is installed here. Exports are configured
 ## at first boot by zcore-init.sh.
 ##
+## lvm2 is for zboxapi's /storage endpoints (a new data disk may be set up
+## as one VG per disk and grown later). Partitioning uses sfdisk from the
+## fdisk package, growing uses growpart from cloud-guest-utils.
+##
 
 echo '> Installing Storage utilities...'
 
 apt-get install -y \
   gdu \
   lftp \
+  lvm2 \
   pure-ftpd \
   nfs-kernel-server
 

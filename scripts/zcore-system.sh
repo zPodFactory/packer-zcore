@@ -17,23 +17,25 @@ apt-get install -y \
   lsd \
   man \
   vim \
-  btop \
   ccze \
   file \
   htop \
   lnav \
   make \
-  mise \
   tmux \
   tree \
   bzip2 \
-  dstat \
   unzip \
   httpie \
   ripgrep \
   colordiff \
   colortail \
   syslog-ng
+
+# Debian's syslog-ng-core postinst only registers the sysvinit script (update-rc.d) and
+# starts the daemon once through invoke-rc.d; it never enables the systemd unit, so the
+# appliance boots with syslog-ng "disabled; preset: enabled" and no /var/log/syslog.
+systemctl enable syslog-ng.service
 
 
 #
@@ -53,5 +55,14 @@ curl -s https://api.github.com/repos/twpayne/chezmoi/releases/latest \
 | cut -d '"' -f 4 \
 | xargs curl -LO \
 && dpkg -i chezmoi_*_linux_amd64.deb && rm chezmoi_*_linux_amd64.deb
+
+
+#
+# Bake kmscon + zBoxTUI into the image (console wiring is left on stock getty;
+# zcore-init.sh decides at first boot from the guestinfo.zboxtui OVF property).
+# https://github.com/zPodFactory/zBoxTUI
+#
+echo '> Installing zBoxTUI (not enabled by default)...'
+/sbin/zcore-zboxtui-setup.sh --install
 
 echo '> Done'
