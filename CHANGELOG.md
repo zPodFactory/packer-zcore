@@ -23,6 +23,8 @@ tag, a var file that does not exist yet, and any string from the local `.release
 
 ## [Unreleased]
 
+## [13.7] — 2026-10-10
+
 ### Added
 - **nftables enabled, with `/etc/nftables.d/` included from `/etc/nftables.conf`**, so the VLAN
   masquerade feature of zBoxAPI 0.2.0 keeps its rules across reboots. Nothing is shipped in that
