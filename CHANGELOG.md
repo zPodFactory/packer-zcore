@@ -24,6 +24,10 @@ tag, a var file that does not exist yet, and any string from the local `.release
 ## [Unreleased]
 
 ### Added
+- **nftables enabled, with `/etc/nftables.d/` included from `/etc/nftables.conf`**, so the VLAN
+  masquerade feature of zBoxAPI 0.2.0 keeps its rules across reboots. Nothing is shipped in that
+  directory: until the first masquerade call there is no table and no NAT hook, and routing is
+  untouched. The package was already on the image by Debian default; it is explicit now.
 - **zBoxTUI on tty1 is opt-in per deployment** via the `guestinfo.zboxtui` OVF property
   (default `False`), the same mechanism as the zBox appliance. kmscon and
   [zBoxTUI](https://github.com/zPodFactory/zBoxTUI) are baked into the image at build time with
@@ -60,6 +64,9 @@ tag, a var file that does not exist yet, and any string from the local `.release
   and the version. `uv` stays in the image for `uv tool upgrade zboxapi`.
 - Nerd Fonts `3.3.0` → `3.5.1` for the kmscon console; catppuccin tmux `v2.1.3` → `v2.3.1`.
 - The fancy oh-my-posh prompt and `eza` aliases also load on kmscon sessions, not only over SSH.
+- kmscon runs with the software renderer (`no-hwaccel`): on the VMware virtual GPU the GL
+  renderer fails every glyph upload and floods syslog and the journal with `text_gltex`
+  warnings while burning a CPU.
 - `zcore-13.5.json` points at the Debian archive, where the 13.5 ISO moved.
 
 ### Fixed
@@ -72,8 +79,8 @@ tag, a var file that does not exist yet, and any string from the local `.release
   `disabled` and no `/var/log/syslog`. The system script now enables it explicitly.
 
 ### Removed
-- `btop`, `mise` (its apt repo stays configured, `apt install mise` is one command away) and
-  `wakey`, as on zBox 13.7.
+- `btop`, `mise` (its apt repo stays configured, `apt install mise` is one command away),
+  `wakey` and `pure-ftpd`, as on zBox 13.7.
 - `dstat`: on Debian 13 it is a virtual package provided by **Performance Co-Pilot**, which
   brought twelve `pcp` packages and three always-on daemons (`pmcd`, `pmlogger`, `pmie`) writing
   metric archives to `/var/log/pcp`. Nothing on the appliance used them.

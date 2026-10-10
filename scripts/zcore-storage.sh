@@ -19,7 +19,6 @@ apt-get install -y \
   gdu \
   lftp \
   lvm2 \
-  pure-ftpd \
   nfs-kernel-server
 
 #

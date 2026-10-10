@@ -23,7 +23,8 @@ apt-get install -y \
   traceroute \
   speedometer \
   bridge-utils \
-  netcat-traditional
+  netcat-traditional \
+  nftables
 
 
 # Install Doggo fancy DNS Client (json output possible, great with jq)
@@ -66,6 +67,27 @@ curl -fsSL -o /dev/null -w "%{url_effective}" -L https://github.com/surge-downlo
 | xargs -I T sh -c 'curl -fsSL https://github.com/surge-downloader/Surge/releases/download/vT/Surge_T_linux_amd64.tar.gz \
   | tar -xzO surge > /usr/local/bin/surge' \
 && chmod 0755 /usr/local/bin/surge
+
+#
+# nftables: zBoxAPI's VLAN masquerade feature writes one file under /etc/nftables.d/
+# (its own table, one rule per masqueraded VLAN) and loads it live with `nft -f`; the
+# service re-loads it at boot so the rules survive a reboot. Nothing is shipped under
+# /etc/nftables.d/: an include glob that matches no file is fine for nft, and until the
+# first masquerade call there is no table, no NAT hook and no connection tracking, so a
+# fresh zCore routes exactly as before. `flush ruleset` at boot is harmless: nothing else
+# on zCore defines nftables tables (FRR is disabled, no firewall). The package was
+# already on the image through Debian's Priority: important; it is in the apt list
+# above so a priority change upstream can never drop it silently.
+#
+mkdir -p /etc/nftables.d
+cat > /etc/nftables.conf << 'EOF'
+#!/usr/sbin/nft -f
+flush ruleset
+include "/etc/nftables.d/*.nft"
+EOF
+chmod 0644 /etc/nftables.conf
+nft -c -f /etc/nftables.conf      # syntax check at build time; fails the build if wrong
+systemctl enable nftables
 
 # zCore routes between the zPod VLANs; FRR is installed but left disabled
 # and enabled on demand by the operator / zBoxAPI.
