@@ -35,6 +35,10 @@ tag, a var file that does not exist yet, and any string from the local `.release
   `--enable` at first boot (tty1 dashboard, tty2 truecolor shell, no network needed), anything
   else runs `--disable`, which purges kmscon and the zBoxTUI venv to reclaim the space.
 - `dnsutils` (`dig`, `nslookup`) next to dnsmasq.
+- `nftables` enabled at boot with `/etc/nftables.conf` including `/etc/nftables.d/*.nft`, for
+  the zboxapi VLAN masquerade feature, which writes its own table there and loads it live.
+  Until the first masquerade call there is no table, no NAT hook and no connection tracking,
+  so a fresh zCore routes exactly as before.
 - `lvm2`, for the zboxapi storage endpoints that set up a data disk as one volume group per
   disk and grow it later (partitioning via `sfdisk`, growing via `growpart`).
 - **lvm2**, for zBoxAPI's upcoming `/storage` endpoints (a new data disk as one VG per disk,
