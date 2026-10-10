@@ -71,8 +71,9 @@ Requirements: `packer`, VMware `ovftool`, and a reachable ESXi build host.
    ```
 
 This runs `packer build` against `zcore.json` with the `zcore-13.7.json` version
-file, then exports the OVA. The result lands in
-`output-zcore-13.7/zcore-13.7.ova` (mode `644`).
+file, then exports the OVA. The OVA is named after `APPLIANCE_VERSION` in `build-zcore.sh`,
+not after the var file: `13.7` lands in `output-zcore-13.7/zcore-13.7.ova` (mode `644`), and a
+respin `13.7.1` of the same Debian release in `output-zcore-13.7.1/zcore-13.7.1.ova`.
 
 ## Releasing
 

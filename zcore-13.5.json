@@ -3,7 +3,6 @@
     "author": "Timo Sugliani",
     "website": "https://github.com/zPodFactory",
     "description": "zCore Appliance",
-    "vm_name": "zcore-13.5",
     "hostname": "zcore",
     "numvcpus": "2",
     "ramsize": "4096",

@@ -35,12 +35,6 @@ tag, a var file that does not exist yet, and any string from the local `.release
   `--enable` at first boot (tty1 dashboard, tty2 truecolor shell, no network needed), anything
   else runs `--disable`, which purges kmscon and the zBoxTUI venv to reclaim the space.
 - `dnsutils` (`dig`, `nslookup`) next to dnsmasq.
-- `nftables` enabled at boot with `/etc/nftables.conf` including `/etc/nftables.d/*.nft`, for
-  the zboxapi VLAN masquerade feature, which writes its own table there and loads it live.
-  Until the first masquerade call there is no table, no NAT hook and no connection tracking,
-  so a fresh zCore routes exactly as before.
-- `lvm2`, for the zboxapi storage endpoints that set up a data disk as one volume group per
-  disk and grow it later (partitioning via `sfdisk`, growing via `growpart`).
 - **lvm2**, for zBoxAPI's upcoming `/storage` endpoints (a new data disk as one VG per disk,
   grown online later). The installer brings it for the root layout; the storage script keeps it
   explicit. Partitioning and growing use `fdisk` and `cloud-guest-utils`, already in the image.
@@ -72,6 +66,11 @@ tag, a var file that does not exist yet, and any string from the local `.release
   renderer fails every glyph upload and floods syslog and the journal with `text_gltex`
   warnings while burning a CPU.
 - `zcore-13.5.json` points at the Debian archive, where the 13.5 ISO moved.
+- **The OVA is named after the release, not the Debian point release.** The appliance version
+  moved out of the var file into `APPLIANCE_VERSION` in `build-zcore.sh`, which packer takes as
+  `appliance_version` and uses for the VM, the output directory and the OVA; the var file keeps
+  only the Debian facts. A respin of the same Debian release now publishes its own
+  `zcore-13.7.1.ova` instead of overwriting `zcore-13.7.ova`.
 
 ### Fixed
 - **zboxapi through Traefik answered 403 `Invalid access_token`** on the first builds of this
