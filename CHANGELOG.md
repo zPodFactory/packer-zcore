@@ -26,6 +26,11 @@ tag, a var file that does not exist yet, and any string from the local `.release
 ## [13.7] — 2026-10-10
 
 ### Added
+- **`disk.EnableUUID=TRUE` in the OVA**, so the guest sees stable SCSI disk serials:
+  `/dev/disk/by-id/` entries for each virtual disk, which zBoxAPI's storage endpoints and CSI
+  drivers rely on. The post-processor inserts it from `postprocess-ova-properties/extraconfig.xml`
+  and packages with `ovftool --allowExtraConfig`, which otherwise drops the key; the build now
+  fails if the key is missing from the OVF.
 - **nftables enabled, with `/etc/nftables.d/` included from `/etc/nftables.conf`**, so the VLAN
   masquerade feature of zBoxAPI 0.2.0 keeps its rules across reboots. Nothing is shipped in that
   directory: until the first masquerade call there is no table and no NAT hook, and routing is
